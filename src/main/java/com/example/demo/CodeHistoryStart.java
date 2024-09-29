@@ -1,5 +1,6 @@
 package com.example.demo;
 
+import com.example.demo.util.FileToJson;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.startup.ProjectActivity;
@@ -34,6 +35,11 @@ public class CodeHistoryStart implements ProjectActivity {
 
             // 现在你可以使用 codeHistoryDir 来进行进一步的操作
         }
+
+        for (VirtualFile root : contentRoots) {
+            FileToJson.traverseDirectory(root, "");
+        }
+
         return null;
     }
 }
