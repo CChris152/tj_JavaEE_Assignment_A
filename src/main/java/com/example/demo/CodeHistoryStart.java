@@ -11,6 +11,8 @@ import kotlin.coroutines.Continuation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+
 public class CodeHistoryStart implements ProjectActivity {
     @Override
     public @Nullable Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
@@ -41,7 +43,11 @@ public class CodeHistoryStart implements ProjectActivity {
         }
 
         for (VirtualFile root : contentRoots) {
-            FileToJson.traverseDirectory(root, "");
+            try {
+                FileToJson.traverseDirectory(root, "");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return null;
