@@ -1,12 +1,55 @@
 package com.example.demo.util;
 
-import com.intellij.openapi.project.Project;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.intellij.openapi.vfs.VirtualFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FileToJson {
     static public void onefiletojson(VirtualFile file, String directoryPath) {
-        System.out.println("Processing file: " + file.getPath());
-        System.out.println("Directory path: " + directoryPath);
+        String projectBasePath = ProjectManager.getProject().getBasePath();
+        Path codeHistoryDir = Paths.get(projectBasePath, "CodeHistory");
+
+        String fileNameWithoutExtension = file.getNameWithoutExtension();
+        String jsonFileName = fileNameWithoutExtension + '_'+ directoryPath.replace("/", "") + ".json";
+        Path jsonFilePath = codeHistoryDir.resolve(jsonFileName);
+
+        if (!Files.exists(codeHistoryDir)) {
+            try {
+                Files.createDirectories(codeHistoryDir);
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Failed to create CodeHistory directory", e);
+            }
+        }
+
+        Map<String, Object> fileInfo = new HashMap<>();
+        fileInfo.put("fileName", file.getName());
+        fileInfo.put("filePath", directoryPath);
+        try {
+            byte[] contentBytes = file.contentsToByteArray();
+            String content = new String(contentBytes);
+            fileInfo.put("content", content);
+        } catch (IOException e) {
+            e.printStackTrace();
+            fileInfo.put("content", "Error reading file content");
+        }
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String jsonString = gson.toJson(fileInfo);
+
+        try {
+            Files.write(jsonFilePath, jsonString.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to write JSON file", e);
+        }
     }
 
     // 递归遍历目录

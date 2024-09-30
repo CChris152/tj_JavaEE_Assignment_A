@@ -1,6 +1,7 @@
 package com.example.demo;
 
 import com.example.demo.util.FileToJson;
+import com.example.demo.util.ProjectManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.startup.ProjectActivity;
@@ -14,6 +15,9 @@ public class CodeHistoryStart implements ProjectActivity {
     @Override
     public @Nullable Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
         System.out.println("打开项目");
+
+        ProjectManager.setProject(project);
+
         VirtualFile[] contentRoots = ProjectRootManager.getInstance(project).getContentRoots();
 
         // 假设我们在第一个内容根目录下创建 "CodeHistory" 目录
