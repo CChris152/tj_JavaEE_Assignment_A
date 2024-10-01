@@ -21,6 +21,11 @@
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <application-components>
+        <component>
+            <implementation-class>com.example.demo.ComponentsInit</implementation-class>
+        </component>
+    </application-components>
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.example.demo.CodeHistoryStart"/>
     </extensions>

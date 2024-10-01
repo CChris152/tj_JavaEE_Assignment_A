@@ -1,4 +1,4 @@
-package com.example.demo.util.structure;
+package com.example.demo.structure;
 
 public class OneVersionInfo {
 

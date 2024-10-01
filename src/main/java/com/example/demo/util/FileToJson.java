@@ -1,6 +1,6 @@
 package com.example.demo.util;
 
-import com.example.demo.util.structure.OneVersionInfo;
+import com.example.demo.structure.OneVersionInfo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -8,7 +8,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.refactoring.rename.RenameProcessor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,7 +35,7 @@ public class FileToJson {
         Path codeHistoryDir = Paths.get(projectBasePath, "CodeHistory");
 
         String fileNameWithoutExtension = file.getNameWithoutExtension();
-        String jsonFileName = fileNameWithoutExtension + '_'+ directoryPath.replace("/", "") + ".json";
+        String jsonFileName = fileNameWithoutExtension + '_'+ directoryPath.replace("\\", "") + ".json";
         Path jsonFilePath = codeHistoryDir.resolve(jsonFileName);
 
         if (!Files.exists(codeHistoryDir)) {
@@ -100,6 +106,38 @@ public class FileToJson {
         }
     }
 
+    //修改文件路径时对json的修改
+    static public void reviseFilePath(Path oldfilePath,Path newfilePath,String fileName) throws IOException {
+        String oldRelativePath=FileManager.getRelativePath(oldfilePath);
+        String newRelativePath=FileManager.getRelativePath(newfilePath);
+        String oldJsonName=fileName+'_'+oldRelativePath.replace("\\", "")+".json";
+        String newJsonName=fileName+'_'+newRelativePath.replace("\\", "")+".json";
+
+        //获取json路径
+        String projectBasePath = ProjectManager.getProject().getBasePath();
+        Path codeHistoryDir = Paths.get(projectBasePath, "CodeHistory");
+        Path jsonFilePath = codeHistoryDir.resolve(oldJsonName);
+
+        //获取与写回数据
+        String jsonContent = new String(Files.readAllBytes(jsonFilePath));
+        JsonNode rootNode = objectMapper.readTree(jsonContent);
+        ObjectNode rootObject = (ObjectNode) rootNode;
+        rootObject.put("filePath", newRelativePath);
+        ObjectWriter writer = objectMapper.writerWithDefaultPrettyPrinter();
+        String updatedJsonContent = writer.writeValueAsString(rootObject);
+        Files.write(jsonFilePath, updatedJsonContent.getBytes());
+
+        //修改json文件名
+        VirtualFile jsonFile=LocalFileSystem.getInstance().findFileByPath(jsonFilePath.toString().replace("\\", "/"));
+        Project project=ProjectManager.getProject();
+        PsiManager psiManager = PsiManager.getInstance(project);
+        PsiFile psiFile = psiManager.findFile(jsonFile);
+        WriteCommandAction.runWriteCommandAction(project, () -> {
+            RenameProcessor renameProcessor = new RenameProcessor(project, psiFile, newJsonName, false, false);
+            renameProcessor.run();
+        });
+    }
+
     //用于读取文件内容
     static public String readFileContent(VirtualFile file) throws IOException {
         byte[] contentBytes = file.contentsToByteArray();
@@ -110,11 +148,11 @@ public class FileToJson {
     static public void traverseDirectory(VirtualFile dir, String currentPath) throws IOException {
         if (!dir.getName().equals("CodeHistory")) {
             for (VirtualFile child : dir.getChildren()) {
-                String childPath = currentPath + "/" + child.getName();
+                String childPath = currentPath + "\\" + child.getName();
                 if (child.isDirectory()) {
                     traverseDirectory(child, childPath);
                 } else if(child.getName().endsWith(".java")){
-                    oneFileToJson(child, childPath);
+                    oneFileToJson(child, currentPath);
                 }
             }
         }
