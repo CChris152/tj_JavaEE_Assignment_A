@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.example.demo.localhistory;
 
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.vfs.VirtualFileManager;

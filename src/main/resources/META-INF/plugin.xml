@@ -23,14 +23,14 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <application-components>
         <component>
-            <implementation-class>com.example.demo.ComponentsInit</implementation-class>
+            <implementation-class>com.example.demo.localhistory.ComponentsInit</implementation-class>
         </component>
     </application-components>
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.example.demo.CodeHistoryStart"/>
+        <postStartupActivity implementation="com.example.demo.localhistory.CodeHistoryStart"/>
     </extensions>
     <actions>
-        <action id="HistoryQuery" class="com.example.demo.HistoryQueryAction" text="HistoryQuery"
+        <action id="HistoryQuery" class="com.example.demo.localhistory.HistoryQueryAction" text="HistoryQuery"
                 description="HistoryQuery">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
