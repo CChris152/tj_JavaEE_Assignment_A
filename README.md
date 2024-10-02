@@ -24,7 +24,7 @@
 当点击不同版本时，右侧将显示information元素中对应版本的content数据，以及当前文件的现有内容，形成对比。
 界面设计可以参考IDEA自带的历史查询功能localhistory（搜索框中搜索localhistory使用）。  
 json的数据结构可以自己运行已有代码查看，下面是示例截图：  
-![img.png](src%2Fmain%2Fresources%2Fpicture%2Fimg.png)  
+![img.png](src/main/resources/picture/img.png)  
 ### git相关接口调研  
 git相关操作对应作业文档中的F2内容，要求在点击一个按钮触发action后，生成一个新分支（如果已有就不生成），用于记录更加细粒化的修改提交，然后在积累一定量的提交后，作为一次提交合并到主分支。  
 调研内容主要为在代码端实现创建git仓库、生成git分支、切换分支、合并分支等操作。  
