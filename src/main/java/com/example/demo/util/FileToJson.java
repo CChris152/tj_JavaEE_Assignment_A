@@ -31,21 +31,7 @@ public class FileToJson {
 
     //负责将一个文件转化为json数据
     static public void oneFileToJson(VirtualFile file, String directoryPath) throws IOException {
-        String projectBasePath = ProjectManager.getProject().getBasePath();
-        Path codeHistoryDir = Paths.get(projectBasePath, "CodeHistory");
-
-        String fileNameWithoutExtension = file.getNameWithoutExtension();
-        String jsonFileName = fileNameWithoutExtension + '_'+ directoryPath.replace("\\", "") + ".json";
-        Path jsonFilePath = codeHistoryDir.resolve(jsonFileName);
-
-        if (!Files.exists(codeHistoryDir)) {
-            try {
-                Files.createDirectories(codeHistoryDir);
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException("Failed to create CodeHistory directory", e);
-            }
-        }
+        Path jsonFilePath = FileManager.getJsonFilePath(file);
 
         if(Files.exists(jsonFilePath)){
             addVersionJson(jsonFilePath, file);
@@ -114,8 +100,7 @@ public class FileToJson {
         String newJsonName=fileName+'_'+newRelativePath.replace("\\", "")+".json";
 
         //获取json路径
-        String projectBasePath = ProjectManager.getProject().getBasePath();
-        Path codeHistoryDir = Paths.get(projectBasePath, "CodeHistory");
+        Path codeHistoryDir = ProjectManager.getPluginPrivateDir();
         Path jsonFilePath = codeHistoryDir.resolve(oldJsonName);
 
         //获取与写回数据
@@ -146,14 +131,12 @@ public class FileToJson {
 
     // 递归遍历整个文件，在打开项目时使用
     static public void traverseDirectory(VirtualFile dir, String currentPath) throws IOException {
-        if (!dir.getName().equals("CodeHistory")) {
-            for (VirtualFile child : dir.getChildren()) {
-                String childPath = currentPath + "\\" + child.getName();
-                if (child.isDirectory()) {
-                    traverseDirectory(child, childPath);
-                } else if(child.getName().endsWith(".java")){
-                    oneFileToJson(child, currentPath);
-                }
+        for (VirtualFile child : dir.getChildren()) {
+            String childPath = currentPath + "\\" + child.getName();
+            if (child.isDirectory()) {
+                traverseDirectory(child, childPath);
+            } else if(child.getName().endsWith(".java")){
+                oneFileToJson(child, currentPath);
             }
         }
     }

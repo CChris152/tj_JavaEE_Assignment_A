@@ -29,25 +29,8 @@ public class CodeHistoryStart implements ProjectActivity {
 
         VirtualFile[] contentRoots = ProjectRootManager.getInstance(project).getContentRoots();
 
-        // 假设我们在第一个内容根目录下创建 "CodeHistory" 目录
-        if (contentRoots.length > 0) {
-            VirtualFile firstContentRoot = contentRoots[0];
-
-            // 构建CodeHistory文件夹的虚拟文件路径
-            VirtualFile codeHistoryDir = firstContentRoot.findChild("CodeHistory");
-
-            // 如果文件夹不存在，则创建它
-            if (codeHistoryDir == null) {
-                try {
-                    codeHistoryDir = firstContentRoot.createChildDirectory(this, "CodeHistory");
-                } catch (Exception e) {
-                    // 处理可能的异常，例如权限问题等
-                    e.printStackTrace();
-                }
-            }
-
-            // 现在你可以使用 codeHistoryDir 来进行进一步的操作
-        }
+        // 创建 "CodeHistory" 目录
+        ProjectManager.getPluginPrivateDir();
 
         // 遍历并处理项目中的文件
         for (VirtualFile root : contentRoots) {

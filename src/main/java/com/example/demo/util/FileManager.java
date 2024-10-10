@@ -47,28 +47,24 @@ public class FileManager {
         return fileName.endsWith(".java");
     }
 
+    // 获取文件对应的json路径
+    static public Path getJsonFilePath(VirtualFile file){
+        Path codeHistoryDir = ProjectManager.getPluginPrivateDir();
+
+        String fileNameWithoutExtension = file.getNameWithoutExtension();
+        String jsonFileName = fileNameWithoutExtension + '_'+ FileManager.getRelativePath(file).replace("\\", "") + ".json";
+        return codeHistoryDir.resolve(jsonFileName);
+    }
+
     // 新增：计算文件的修改量，返回文件的字符变化数量
     static public int getChangeAmount(VirtualFile file) throws IOException {
         // 获取文件的当前内容
         String newContent = new String(file.contentsToByteArray(), StandardCharsets.UTF_8);
 
-        // 获取文件的旧内容 (这里需要实际的旧版本内容获取逻辑)
-        String oldContent = getOldContent(file);
+        // 获取文件的旧内容
+        String oldContent = JsonManager.getLatestContent(FileManager.getJsonFilePath(file));
 
         // 计算新旧内容的字符差异
         return Math.abs(newContent.length() - oldContent.length());
-    }
-
-    // 假设有一个方法可以获取文件的旧内容
-    private static String getOldContent(VirtualFile file) throws IOException {
-        // 在这里实现获取旧版本内容的逻辑。假设旧版本的内容保存在某个目录中。
-        // 这个逻辑可能依赖于实际的版本管理系统，例如 JSON 版本存储。
-
-        Path oldFilePath = Paths.get("path_to_saved_version_directory", file.getName());
-        if (Files.exists(oldFilePath)) {
-            return new String(Files.readAllBytes(oldFilePath), StandardCharsets.UTF_8);
-        } else {
-            return ""; // 如果没有旧版本，返回空内容
-        }
     }
 }
