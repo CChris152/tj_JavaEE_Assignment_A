@@ -14,6 +14,10 @@ public class JsonManager {
 
     //获取对应路径Json最新版本的content内容
     static public String getLatestContent(Path jsonFilePath) throws IOException {
+        if(!Files.exists(jsonFilePath)){
+            return "";
+        }
+
         String jsonContent = new String(Files.readAllBytes(jsonFilePath));
         JsonNode rootNode = objectMapper.readTree(jsonContent);
         ObjectNode rootObject = (ObjectNode) rootNode;

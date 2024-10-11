@@ -1,5 +1,6 @@
 package com.example.demo.util;
 
+import com.example.demo.data.AllData;
 import com.example.demo.structure.OneVersionInfo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,8 +31,19 @@ public class FileToJson {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     //负责将一个文件转化为json数据
-    static public void oneFileToJson(VirtualFile file, String directoryPath) throws IOException {
+    static public void oneFileToJson(VirtualFile file, String directoryPath, int modifyThreshold) throws IOException {
         Path jsonFilePath = FileManager.getJsonFilePath(file);
+
+        if (FileManager.isJavaFile(file)) {
+            try {
+                int changeAmount = FileManager.getChangeAmount(file);
+                if (changeAmount < modifyThreshold) {
+                    return;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         if(Files.exists(jsonFilePath)){
             addVersionJson(jsonFilePath, file);
@@ -130,13 +142,13 @@ public class FileToJson {
     }
 
     // 递归遍历整个文件，在打开项目时使用
-    static public void traverseDirectory(VirtualFile dir, String currentPath) throws IOException {
+    static public void traverseDirectory(VirtualFile dir, String currentPath, int modifyThreshold) throws IOException {
         for (VirtualFile child : dir.getChildren()) {
             String childPath = currentPath + "\\" + child.getName();
             if (child.isDirectory()) {
-                traverseDirectory(child, childPath);
+                traverseDirectory(child, childPath, modifyThreshold);
             } else if(child.getName().endsWith(".java")){
-                oneFileToJson(child, currentPath);
+                oneFileToJson(child, currentPath, modifyThreshold);
             }
         }
     }

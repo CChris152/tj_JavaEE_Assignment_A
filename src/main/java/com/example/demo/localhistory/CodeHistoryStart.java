@@ -1,5 +1,6 @@
 package com.example.demo.localhistory;
 
+import com.example.demo.data.AllData;
 import com.example.demo.util.FileToJson;
 import com.example.demo.util.ProjectManager;
 import com.intellij.openapi.project.Project;
@@ -35,7 +36,7 @@ public class CodeHistoryStart implements ProjectActivity {
         // 遍历并处理项目中的文件
         for (VirtualFile root : contentRoots) {
             try {
-                FileToJson.traverseDirectory(root, "");
+                FileToJson.traverseDirectory(root, "", AllData.initializeThreshold);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -53,7 +54,7 @@ public class CodeHistoryStart implements ProjectActivity {
         for (VirtualFile root : contentRoots) {
             try {
                 // 递归遍历并保存文件的变化
-                FileToJson.traverseDirectory(root, "");
+                FileToJson.traverseDirectory(root, "", AllData.schedulerThreshold);
             } catch (IOException e) {
                 e.printStackTrace();
             }
