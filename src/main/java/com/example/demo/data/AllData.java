@@ -9,7 +9,7 @@ public class AllData {
     //单次修改时的差异阈值
     static public int onceModifyThreshold = 10;
     //轮转调度时的差异阈值
-    static public int schedulerThreshold = 5;
+    static public int schedulerThreshold = 1;
     //文件创建时的差异阈值
     static public int createThreshold = 1;
 }

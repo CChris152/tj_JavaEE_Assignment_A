@@ -36,7 +36,7 @@ public class FileToJson {
 
         if (FileManager.isJavaFile(file)) {
             try {
-                int changeAmount = FileManager.getChangeAmount(file);
+                double changeAmount = FileManager.getChangeAmount(file);
                 if (changeAmount < modifyThreshold) {
                     return;
                 }
@@ -44,6 +44,7 @@ public class FileToJson {
                 throw new RuntimeException(e);
             }
         }
+        System.out.println("文件因变化量任务保存: ");
 
         if(Files.exists(jsonFilePath)){
             addVersionJson(jsonFilePath, file);

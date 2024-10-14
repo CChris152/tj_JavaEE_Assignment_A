@@ -9,6 +9,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
+
 
 public class FileManager {
 
@@ -39,7 +43,6 @@ public class FileManager {
 
     // 判断是否为Java文件
     static public boolean isJavaFile(VirtualFile file) {
-        // 检查文件是否为空且是否是一个文件（而不是目录）
         if (file == null || file.isDirectory()) {
             return false;
         }
@@ -56,15 +59,43 @@ public class FileManager {
         return codeHistoryDir.resolve(jsonFileName);
     }
 
-    // 新增：计算文件的修改量，返回文件的字符变化数量
-    static public int getChangeAmount(VirtualFile file) throws IOException {
-        // 获取文件的当前内容
+    // 修改量计算，返回文件的修改百分比
+    static public double getChangeAmount(VirtualFile file) throws IOException {
+        // 获取文件的当前内容，并按行分割
         String newContent = new String(file.contentsToByteArray(), StandardCharsets.UTF_8);
+        List<String> newContentLines = new ArrayList<>(List.of(newContent.split("\n")));
 
-        // 获取文件的旧内容
-        String oldContent = JsonManager.getLatestContent(FileManager.getJsonFilePath(file));
+        // 获取文件的旧内容，并按行分割
+        String oldContent = JsonManager.getLatestContent(getJsonFilePath(file));  // 确保此方法返回文件的旧内容
+        List<String> oldContentLines = new ArrayList<>(List.of(oldContent.split("\n")));
 
-        // 计算新旧内容的字符差异
-        return Math.abs(newContent.length() - oldContent.length());
+        // 计算差异
+        int totalLines = oldContentLines.size();
+        int changes = calculateChanges(oldContentLines, newContentLines);
+
+        // 如果旧文件为空，则防止除零错误
+        if (totalLines == 0) {
+            return 100.0;  // 当旧文件没有内容时，认为是100%变化
+        }
+
+        // 计算变更百分比
+        return (double) changes / totalLines * 100.0;
+    }
+
+    // 辅助方法计算两个文本行列表的差异
+    static int calculateChanges(List<String> oldLines, List<String> newLines) {
+        int changes = 0;
+        int maxIndex = Math.max(oldLines.size(), newLines.size());
+
+        for (int i = 0; i < maxIndex; i++) {
+            String oldLine = i < oldLines.size() ? oldLines.get(i) : "";
+            String newLine = i < newLines.size() ? newLines.get(i) : "";
+
+            if (!oldLine.equals(newLine)) {
+                changes++;
+            }
+        }
+
+        return changes;
     }
 }
