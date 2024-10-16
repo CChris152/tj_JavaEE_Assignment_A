@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.example"
-version = "1.0-SNAPSHOT"
+version = "1.11.1-SNAPSHOT"
 
 repositories {
     //    mavenCentral()
@@ -14,15 +14,26 @@ repositories {
     }
 }
 
+
+dependencies {
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    // https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r")
+
+}
+
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
-    localPath.set("F:\\IntelliJ\\IntelliJ IDEA Community Edition 2024.2.3")
+    localPath.set("D:\\Intellij\\IntelliJ IDEA 2024.2.1")
     //    version.set("2023.2.6")
     //    type.set("IC") // Target IDE Platform
 
     plugins.set(listOf(/* Plugin Dependencies */))
 }
+
+
 
 tasks {
     // Set the JVM compatibility versions

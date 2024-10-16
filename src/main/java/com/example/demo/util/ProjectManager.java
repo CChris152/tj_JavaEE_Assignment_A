@@ -9,7 +9,7 @@ public class ProjectManager {
         ProjectManager.project=project;
     }
 
-    static public Project getProject(){
+    static public Project getProject() {
         return ProjectManager.project;
     }
 }
