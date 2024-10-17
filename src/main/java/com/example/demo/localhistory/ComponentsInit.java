@@ -4,15 +4,20 @@ import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.vfs.VirtualFileManager;
 
 public class ComponentsInit implements ApplicationComponent {
-    private final FileEventListener fileEventListener = new FileEventListener();
+    private FileEventListener fileEventListener;
 
     @Override
     public void initComponent() {
+        // 初始化文件事件监听器
+        fileEventListener = new FileEventListener();
         VirtualFileManager.getInstance().addVirtualFileListener(fileEventListener);
     }
 
     @Override
     public void disposeComponent() {
-        VirtualFileManager.getInstance().removeVirtualFileListener(fileEventListener);
+        // 移除文件事件监听器
+        if (fileEventListener != null) {
+            VirtualFileManager.getInstance().removeVirtualFileListener(fileEventListener);
+        }
     }
 }

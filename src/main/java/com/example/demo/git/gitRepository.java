@@ -1,12 +1,22 @@
 package com.example.demo.git;
 
-import com.example.demo.util.FileManager;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffFormatter;
+import org.eclipse.jgit.diff.RawTextComparator;
+import org.eclipse.jgit.dircache.DirCacheCheckout;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import java.io.IOException;
+
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
+import java.util.List;
 
 public class gitRepository {
 
@@ -14,19 +24,20 @@ public class gitRepository {
 
     private gitRepository(){};
 
+    private static File projectPath;
 
 /**
  * 单例获取实例方法
  * */
     public static Git getInstance() throws GitAPIException, IOException {
         if(git == null){
-            File projectPath=getGitPath();
+
             if(!isPathExist(projectPath)){
                 createRepository(projectPath);
             }//当前项目内不存在仓库
             else{
                 FileRepositoryBuilder builder = new FileRepositoryBuilder();
-                try(Repository repo = builder.setGitDir(projectPath)
+                try(Repository repo = builder.setGitDir(new File(projectPath,".git"))
                         .readEnvironment().findGitDir().build())
                 {
                     git = new Git(repo);
@@ -63,19 +74,19 @@ public class gitRepository {
           e.printStackTrace();
       }
     }
-    /**
-     * 通过在本目录下创造临时文件获取绝对目录 ，再删除文件达到无影响。
-     *
-     * */
-    public static File getGitPath() throws IOException
+
+    public static void setGitDir(String gitDir)
     {
-        File localPath = File.createTempFile("TestGitRepository", "");
-        if(!localPath.delete())
-        {
-            throw new IOException("Could not delete temporary file " + localPath);
-        }
-        return localPath;
+        projectPath = new File(gitDir);
     }
+
+
+
+
+
+
+
+
 
 
 

@@ -1,5 +1,7 @@
 package com.example.demo.util;
 
+import com.example.demo.data.AllData;
+import com.example.demo.git.initialGitCommit;
 import com.example.demo.structure.OneVersionInfo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +17,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.refactoring.rename.RenameProcessor;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,23 +33,30 @@ public class FileToJson {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     //负责将一个文件转化为json数据
-    static public void oneFileToJson(VirtualFile file, String directoryPath) throws IOException {
-        String projectBasePath = ProjectManager.getProject().getBasePath();
-        Path codeHistoryDir = Paths.get(projectBasePath, "CodeHistory");
+    static public void oneFileToJson(VirtualFile file, String directoryPath, int modifyThreshold) throws IOException {
+        Path jsonFilePath = FileManager.getJsonFilePath(file);
 
-        String fileNameWithoutExtension = file.getNameWithoutExtension();
-        String jsonFileName = fileNameWithoutExtension + '_'+ directoryPath.replace("\\", "") + ".json";
-        Path jsonFilePath = codeHistoryDir.resolve(jsonFileName);
-
-        if (!Files.exists(codeHistoryDir)) {
+        if (FileManager.isJavaFile(file)) {
             try {
-                Files.createDirectories(codeHistoryDir);
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException("Failed to create CodeHistory directory", e);
+                double changeAmount = FileManager.getChangeAmount(file);
+                if (changeAmount < modifyThreshold) {
+
+                    return;
+                }
+            } catch (IOException  e) {
+                throw new RuntimeException(e);
             }
         }
+        System.out.println("文件因变化量任务保存: ");
+        try {
 
+            if (initialGitCommit.Running()) {
+                initialGitCommit.Commit();
+            }
+        }
+        catch (GitAPIException e) {
+            throw new RuntimeException(e);
+        }
         if(Files.exists(jsonFilePath)){
             addVersionJson(jsonFilePath, file);
         }else{
@@ -114,8 +124,7 @@ public class FileToJson {
         String newJsonName=fileName+'_'+newRelativePath.replace("\\", "")+".json";
 
         //获取json路径
-        String projectBasePath = ProjectManager.getProject().getBasePath();
-        Path codeHistoryDir = Paths.get(projectBasePath, "CodeHistory");
+        Path codeHistoryDir = ProjectManager.getPluginPrivateDir();
         Path jsonFilePath = codeHistoryDir.resolve(oldJsonName);
 
         //获取与写回数据
@@ -145,15 +154,13 @@ public class FileToJson {
     }
 
     // 递归遍历整个文件，在打开项目时使用
-    static public void traverseDirectory(VirtualFile dir, String currentPath) throws IOException {
-        if (!dir.getName().equals("CodeHistory")) {
-            for (VirtualFile child : dir.getChildren()) {
-                String childPath = currentPath + "\\" + child.getName();
-                if (child.isDirectory()) {
-                    traverseDirectory(child, childPath);
-                } else if(child.getName().endsWith(".java")){
-                    oneFileToJson(child, currentPath);
-                }
+    static public void traverseDirectory(VirtualFile dir, String currentPath, int modifyThreshold) throws IOException {
+        for (VirtualFile child : dir.getChildren()) {
+            String childPath = currentPath + "\\" + child.getName();
+            if (child.isDirectory()) {
+                traverseDirectory(child, childPath, modifyThreshold);
+            } else if(child.getName().endsWith(".java")){
+                oneFileToJson(child, currentPath, modifyThreshold);
             }
         }
     }

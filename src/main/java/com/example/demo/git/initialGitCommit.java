@@ -1,10 +1,12 @@
 package com.example.demo.git;
 
+import com.example.demo.util.CommitInfoPanel;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -13,9 +15,16 @@ import java.util.concurrent.TimeUnit;
 public class initialGitCommit extends AnAction {
 
 
-    private boolean isRunning = false;
+    private static boolean isRunning = false;
     private ScheduledExecutorService scheduler;
     private static String oldBranch;
+    private static Integer version;
+    public static CommitInfoPanel commitInfoPanel;
+
+    public static boolean Running(){
+        return isRunning;
+    }
+
 
     @Override
     public void actionPerformed(AnActionEvent e) {
@@ -23,10 +32,13 @@ public class initialGitCommit extends AnAction {
         try{
             if (isRunning) {
                 System.out.println("isRunning");
-                stopScheduler();
+                gitAction.mergeLastCommitFromBranch(gitRepository.getInstance(),oldBranch,"fineGrained");
             } else {
                 System.out.println("notRunning");
-                startScheduler();
+                gitRepository.setGitDir(e.getProject().getBasePath());
+                initGit();
+                version=0;
+
             }
             isRunning = !isRunning;
         }
@@ -37,7 +49,9 @@ public class initialGitCommit extends AnAction {
             ex2.printStackTrace();
         }
     }
-
+    /**
+     * 因sheduler合并至主监听器上废弃
+     * */
     public void startScheduler() {
         try {
             initGit();
@@ -56,17 +70,23 @@ public class initialGitCommit extends AnAction {
     }
 
     public void initGit() throws GitAPIException, IOException {
-        System.out.println("initGit");
         oldBranch = gitRepository.getInstance().getRepository().getBranch();
-        System.out.println(oldBranch);
+        System.out.println(gitRepository.getInstance().getRepository().toString());
+
+
         gitAction.createBranch(gitRepository.getInstance());
+
     }
 
-    public void Commit() throws GitAPIException, IOException {
+    public static void Commit() throws GitAPIException, IOException {
         System.out.println("Commit");
-        gitAction.commit(gitRepository.getInstance());
+        gitAction.commit(gitRepository.getInstance(),version);
     }
 
+
+    /**
+     * 因sheduler合并至主监听器上废弃
+     * */
     public void stopScheduler() throws GitAPIException, IOException {
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdownNow();
@@ -77,6 +97,15 @@ public class initialGitCommit extends AnAction {
     @Override
     public void update(@NotNull AnActionEvent e) {
         e.getPresentation().setText(isRunning ? "停止定时commit" : "启动定时commit");
+    }
+
+
+    public static void showCommitInfoPanel() {
+        JFrame frame = new JFrame("Commit History");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setContentPane(commitInfoPanel.getMainPanel());
+        frame.setSize(400, 300);
+        frame.setVisible(true);
     }
 
 }
