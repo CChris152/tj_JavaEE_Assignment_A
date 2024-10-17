@@ -1,27 +1,29 @@
 package com.example.demo.git;
 
 
-import com.example.demo.util.FileManager;
-import com.example.demo.util.CommitInfoPanel;
+import com.example.demo.util.CommitHistoryToolWindowFactory;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.ui.content.Content;
+import com.intellij.ui.content.ContentManager;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
-import org.eclipse.jgit.lib.Repository;
-import java.io.IOException;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
-
-import static com.example.demo.git.initialGitCommit.showCommitInfoPanel;
 
 public class gitAction {
 
@@ -35,19 +37,26 @@ public class gitAction {
         System.out.println("Checkout created");
     }
 
-    public static void commit(Git git,Integer version) throws GitAPIException {
+    public static void commit(Git git, Integer version, Project project) throws GitAPIException {
         git.add().setUpdate(true).addFilepattern(".").call();
-        version++;
+
         RevCommit commit =git.commit().setMessage("V."+version.toString()).call();
-        String commitMessage = formatCommitInfo(commit);
-        initialGitCommit.commitInfoPanel.addCommitInfo(commitMessage);
-        initialGitCommit.showCommitInfoPanel();
+        System.out.println("table enter");
+        String commitMessage = commit.getShortMessage();
+        ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Commit History");
+
+        // 更新表格内容
+        CommitHistoryToolWindowFactory.addCommitInfo(commitMessage);
+        System.out.println("table done");
+
     }
 
     public static void mergeLast(Git git,String oldBranch) throws GitAPIException {
         Iterable<RevCommit> log = git.log().setMaxCount(1).call();
         RevCommit lastCommit = log.iterator().next();
+        System.out.println("checkout old");
         git.checkout().setName(oldBranch).call();
+        System.out.println("lastCommit merge");
         git.cherryPick().include(lastCommit).call();
     }
 
@@ -80,31 +89,67 @@ public class gitAction {
     }
 
     public static void applyCommitToTargetBranch(Git git, String targetBranch, RevCommit sourceCommit, String commitMessage) throws GitAPIException, IOException {
-        checkoutBranch(git, targetBranch);  // 切换到目标分支
+        synchronized (git.getRepository()) {
+            // 切换到目标分支
+            checkoutBranch(git, targetBranch);
 
-        // 更新工作树为源分支最后的commit状态
-        DirCacheCheckout checkout = new DirCacheCheckout(git.getRepository(), git.getRepository().readDirCache(), sourceCommit.getTree());
-        checkout.setFailOnConflict(true);
-        checkout.checkout();
+            // 检查工作树是否干净
+            Status status = git.status().call();
+            if (!status.isClean()) {
+                throw new GitAPIException("Working directory has uncommitted changes or untracked files. Please commit or stash them before proceeding.") {};
+            }
 
-        // 提交新的commit
-        git.commit()
-                .setMessage(commitMessage)
-                .call();
+            // 检查并删除锁文件（如果存在）
+            File lockFile = new File(git.getRepository().getDirectory(), "index.lock");
+            if (lockFile.exists()) {
+                if (!lockFile.delete()) {
+                    throw new IOException("Failed to delete lock file: " + lockFile.getAbsolutePath());
+                }
+            }
+
+            try {
+                System.out.println("Before Cache");
+
+                // 更新工作树为源分支最后的commit状态
+                DirCacheCheckout checkout = new DirCacheCheckout(git.getRepository(), git.getRepository().readDirCache(), sourceCommit.getTree());
+                checkout.setFailOnConflict(true);
+                System.out.println("checkout checkout");
+
+                // 执行 checkout 操作
+                checkout.checkout();
+                System.out.println("commit after checkout");
+
+                // 提交新的 commit
+                git.commit()
+                        .setMessage(commitMessage)
+                        .call();
+
+            } catch (Exception e) {
+                // 捕获异常并输出错误信息
+                e.printStackTrace();
+                throw new GitAPIException("An error occurred during the checkout or commit process.", e) {};
+            } finally {
+                // 确保关闭 Git 资源
+                git.getRepository().close();
+            }
+        }
     }
+
 
     public static void mergeLastCommitFromBranch(Git git, String sourceBranch, String targetBranch) throws GitAPIException, IOException {
         // 获取源分支的最后一个commit
         RevCommit sourceCommit = getLastCommit(git, sourceBranch);
-
+        //System.out.println("sourceBranch commit done");
         // 获取目标分支的最后一个commit
         RevCommit targetCommit = getLastCommit(git, targetBranch);
-
+        //System.out.println("targetBranch commit done");
         // 生成 diff 信息
         String diffMessage = generateDiffMessage(git, targetCommit, sourceCommit);
 
         // 应用 commit 到目标分支
+        System.out.println("merge start");
         applyCommitToTargetBranch(git, targetBranch, sourceCommit, diffMessage);
+        System.out.println("merge done");
     }
 
     private static String formatCommitInfo(RevCommit commit) {

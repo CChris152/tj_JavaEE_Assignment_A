@@ -1,5 +1,6 @@
 package com.example.demo.git;
 
+import com.intellij.openapi.project.Project;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -20,11 +21,14 @@ import java.util.List;
 
 public class gitRepository {
 
+
     private static Git git;
 
     private gitRepository(){};
 
     private static File projectPath;
+
+
 
 /**
  * 单例获取实例方法

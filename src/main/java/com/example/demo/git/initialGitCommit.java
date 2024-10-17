@@ -1,10 +1,14 @@
 package com.example.demo.git;
 
-import com.example.demo.util.CommitInfoPanel;
+import com.example.demo.util.CommitHistoryToolWindowFactory;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowManager;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.revwalk.RevCommit;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -18,8 +22,10 @@ public class initialGitCommit extends AnAction {
     private static boolean isRunning = false;
     private ScheduledExecutorService scheduler;
     private static String oldBranch;
-    private static Integer version;
-    public static CommitInfoPanel commitInfoPanel;
+    private static Integer version = 0;
+
+    private static Project project ;
+
 
     public static boolean Running(){
         return isRunning;
@@ -28,16 +34,22 @@ public class initialGitCommit extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent e) {
-        System.out.println("开始InitialGitCommit");
+
+
+        project=e.getProject();
         try{
             if (isRunning) {
+
                 System.out.println("isRunning");
-                gitAction.mergeLastCommitFromBranch(gitRepository.getInstance(),oldBranch,"fineGrained");
+                gitAction.mergeLastCommitFromBranch(gitRepository.getInstance(),"fineGrained",oldBranch);
+                gitRepository.getInstance().branchDelete().setBranchNames("fineGrained").call();
             } else {
                 System.out.println("notRunning");
                 gitRepository.setGitDir(e.getProject().getBasePath());
                 initGit();
-                version=0;
+
+
+
 
             }
             isRunning = !isRunning;
@@ -49,6 +61,9 @@ public class initialGitCommit extends AnAction {
             ex2.printStackTrace();
         }
     }
+
+
+
     /**
      * 因sheduler合并至主监听器上废弃
      * */
@@ -73,6 +88,9 @@ public class initialGitCommit extends AnAction {
         oldBranch = gitRepository.getInstance().getRepository().getBranch();
         System.out.println(gitRepository.getInstance().getRepository().toString());
 
+        gitRepository.getInstance().add().setUpdate(true).addFilepattern(".").call();
+
+        RevCommit commit =gitRepository.getInstance().commit().setMessage("开始启动自动commit插件").call();
 
         gitAction.createBranch(gitRepository.getInstance());
 
@@ -80,7 +98,8 @@ public class initialGitCommit extends AnAction {
 
     public static void Commit() throws GitAPIException, IOException {
         System.out.println("Commit");
-        gitAction.commit(gitRepository.getInstance(),version);
+        versionItra();
+        gitAction.commit(gitRepository.getInstance(),version,project);
     }
 
 
@@ -100,12 +119,11 @@ public class initialGitCommit extends AnAction {
     }
 
 
-    public static void showCommitInfoPanel() {
-        JFrame frame = new JFrame("Commit History");
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setContentPane(commitInfoPanel.getMainPanel());
-        frame.setSize(400, 300);
-        frame.setVisible(true);
+
+
+    private static void versionItra()
+    {
+        version++;
     }
 
 }
