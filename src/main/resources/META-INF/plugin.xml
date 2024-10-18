@@ -29,10 +29,20 @@
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.example.demo.localhistory.CodeHistoryStart"/>
     </extensions>
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Commit History"
+                    factoryClass="com.example.demo.util.CommitHistoryToolWindowFactory"
+                    anchor="bottom"/>
+    </extensions>
+
     <actions>
         <action id="HistoryQuery" class="com.example.demo.localhistory.HistoryQueryAction" text="HistoryQuery"
                 description="HistoryQuery">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
+        </action>
+        <action id="com.example.demo.git.initialGit" class="com.example.demo.git.initialGitCommit"
+                text="initialGitCommit" description="初始化代码推送">
+            <add-to-group group-id="MainToolbarQuickActions" anchor="first"/>
         </action>
         <action id="CodeSave" class="com.example.demo.localhistory.CodeSaveAction" text="CodeSave"
                 description="CodeSave">

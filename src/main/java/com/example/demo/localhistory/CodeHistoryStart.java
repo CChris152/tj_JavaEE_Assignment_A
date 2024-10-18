@@ -10,9 +10,10 @@ import com.intellij.openapi.startup.ProjectActivity;
 import com.intellij.openapi.vfs.VirtualFile;
 import kotlin.Unit;
 import kotlin.coroutines.Continuation;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
+import com.example.demo.git.initialGitCommit;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -70,6 +71,42 @@ public class CodeHistoryStart implements ProjectActivity {
         } else if (file.getName().endsWith(".java")) {
             double changeAmount = FileManager.getChangeAmount(file);  // 获取文件修改百分比
             if (changeAmount > AllData.schedulerThreshold) {  // 当修改量超过阈值时才保存
+                FileToJson.oneFileToJson(file, FileManager.getRelativePath(file), AllData.schedulerThreshold);
+                System.out.println("文件因定时轮转任务保存: " + file.getPath() + "，修改量: " + changeAmount + "%");
+            }
+        }
+    }
+
+    // 停止定时任务
+    public void stopAutoSaveTask() {
+        scheduler.shutdown();
+    }
+
+    // 扫描并保存有修改的文件
+    private void scanAndSaveModifiedFiles() {
+        VirtualFile[] contentRoots = ProjectRootManager.getInstance(ProjectManager.getProject()).getContentRoots();
+        for (VirtualFile root : contentRoots) {
+            try {
+                traverseAndCheckFiles(root);
+            } catch (IOException | GitAPIException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // 递归遍历目录，并检查文件修改量
+    private void traverseAndCheckFiles(VirtualFile file) throws GitAPIException,IOException {
+        if (file.isDirectory()) {
+            for (VirtualFile child : file.getChildren()) {
+                traverseAndCheckFiles(child);
+            }
+        } else if (file.getName().endsWith(".java")) {
+            double changeAmount = FileManager.getChangeAmount(file);  // 获取文件修改百分比
+            if (changeAmount > AllData.schedulerThreshold) {  // 当修改量超过阈值时才保存
+                if(initialGitCommit.Running())
+                {
+                    initialGitCommit.Commit();
+                }
                 FileToJson.oneFileToJson(file, FileManager.getRelativePath(file), AllData.schedulerThreshold);
                 System.out.println("文件因定时轮转任务保存: " + file.getPath() + "，修改量: " + changeAmount + "%");
             }

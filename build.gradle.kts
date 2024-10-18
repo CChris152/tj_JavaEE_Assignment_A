@@ -5,13 +5,22 @@ plugins {
 }
 
 group = "com.example"
-version = "1.0-SNAPSHOT"
+version = "1.11.1-SNAPSHOT"
 
 repositories {
     //    mavenCentral()
     maven {
         url = uri("https://maven.aliyun.com/repository/public")
     }
+}
+
+
+dependencies {
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    // https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r")
+
 }
 
 // Configure Gradle IntelliJ Plugin
@@ -23,6 +32,8 @@ intellij {
 
     plugins.set(listOf(/* Plugin Dependencies */))
 }
+
+
 
 tasks {
     // Set the JVM compatibility versions

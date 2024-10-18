@@ -1,6 +1,8 @@
 package com.example.demo.util;
 
 import com.example.demo.data.AllData;
+import com.example.demo.data.AllData;
+import com.example.demo.git.initialGitCommit;
 import com.example.demo.structure.OneVersionInfo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +18,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.refactoring.rename.RenameProcessor;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,7 +48,16 @@ public class FileToJson {
             }
         }
         System.out.println("文件因变化量任务保存: ");
+        System.out.println("文件因变化量任务保存: ");
+        try {
 
+            if (initialGitCommit.Running()) {
+                initialGitCommit.Commit();
+            }
+        }
+        catch (GitAPIException e) {
+            throw new RuntimeException(e);
+        }
         if(Files.exists(jsonFilePath)){
             addVersionJson(jsonFilePath, file);
         }else{
