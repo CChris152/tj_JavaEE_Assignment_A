@@ -1,6 +1,7 @@
 package com.example.demo.git;
 
 import com.example.demo.util.CommitHistoryToolWindowFactory;
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
@@ -29,6 +30,15 @@ public class initialGitCommit extends AnAction {
 
     public static boolean Running(){
         return isRunning;
+    }
+
+
+    @Override
+    public ActionUpdateThread getActionUpdateThread() {
+        // 根据你的动作是否需要访问UI或进行耗时操作来选择EDT或BGT
+        // 如果动作需要更新UI组件，则使用EDT
+        // 如果动作只是进行后台计算或检查，则使用BGT
+        return ActionUpdateThread.EDT; // 或者 return ActionUpdateThread.BGT;
     }
 
 

@@ -42,7 +42,7 @@
         </action>
         <action id="com.example.demo.git.initialGit" class="com.example.demo.git.initialGitCommit"
                 text="initialGitCommit" description="初始化代码推送">
-            <add-to-group group-id="MainToolbarQuickActions" anchor="first"/>
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
         <action id="CodeSave" class="com.example.demo.localhistory.CodeSaveAction" text="CodeSave"
                 description="CodeSave">
