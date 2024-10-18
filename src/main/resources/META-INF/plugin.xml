@@ -34,5 +34,9 @@
                 description="HistoryQuery">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
+        <action id="CodeSave" class="com.example.demo.localhistory.CodeSaveAction" text="CodeSave"
+                description="CodeSave">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+        </action>
     </actions>
 </idea-plugin>
