@@ -1,5 +1,7 @@
 package com.example.demo.showDetail;
 
+import com.example.demo.util.FileManager;
+import com.example.demo.util.JsonManager;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.editor.Document;
@@ -16,9 +18,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.util.ArrayList;
 
 
 public class showDetailAction extends AnAction {
+
+    private VirtualFile file;
 
     @Override
     public void actionPerformed(AnActionEvent e) {
@@ -37,6 +43,7 @@ public class showDetailAction extends AnAction {
         }
 
         VirtualFile selectedFile = files[0];
+        file=selectedFile;
         Document document = FileDocumentManager.getInstance().getDocument(selectedFile);
         if (document == null) {
             Messages.showMessageDialog("Failed to get the document for the selected file.", "Error", Messages.getErrorIcon());
@@ -47,22 +54,29 @@ public class showDetailAction extends AnAction {
         String currentVersionCode = document.getText();
 
         // 创建并显示主窗口
-        SwingUtilities.invokeLater(() -> new VersionComparisonUI(currentVersionCode).setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            try {
+                new VersionComparisonUI(currentVersionCode).setVisible(true);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
     }
 
-    private static class VersionComparisonUI extends JFrame {
+    private class VersionComparisonUI extends JFrame {
 
         private JList<String> versionList;
         private DefaultListModel<String> versionListModel;
         private JTextArea codeArea;
         private JTextArea currentVersionArea;
 
-        public VersionComparisonUI(String currentVersionCode) {
+        public VersionComparisonUI(String currentVersionCode) throws IOException {
             // 初始化模型
             versionListModel = new DefaultListModel<>();
-            versionListModel.addElement("Version 1 - 2023-10-01");
-            versionListModel.addElement("Version 2 - 2023-10-10");
-            versionListModel.addElement("Version 3 - 2023-10-20");
+            ArrayList<String> directoryList= JsonManager.getVersionList(FileManager.getJsonFilePath(file));
+            for(String oneDirectory : directoryList){
+                versionListModel.addElement(oneDirectory);
+            }
 
             // 创建导航栏
             versionList = new JList<>(versionListModel);
@@ -71,7 +85,12 @@ public class showDetailAction extends AnAction {
                 if (!e.getValueIsAdjusting()) {
                     int selectedIndex = versionList.getSelectedIndex();
                     if (selectedIndex != -1) {
-                        String selectedVersionCode = loadCodeByVersionIndex(selectedIndex);
+                        String selectedVersionCode = null;
+                        try {
+                            selectedVersionCode = JsonManager.getVersionContent(selectedIndex, FileManager.getJsonFilePath(file));
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
                         codeArea.setText(selectedVersionCode);
                     }
                 }
@@ -126,33 +145,6 @@ public class showDetailAction extends AnAction {
             setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             add(mainPanel);
             setLocationRelativeTo(null); // 居中显示
-        }
-
-        // 模拟加载代码的方法
-        private String loadCodeByVersionIndex(int index) {
-            // 这里可以替换为实际的代码加载逻辑
-            switch (index) {
-                case 0:
-                    return "public class Version1 {\n" +
-                            "    public void method1() {\n" +
-                            "        System.out.println(\"Version 1\");\n" +
-                            "    }\n" +
-                            "}";
-                case 1:
-                    return "public class Version2 {\n" +
-                            "    public void method2() {\n" +
-                            "        System.out.println(\"Version 2\");\n" +
-                            "    }\n" +
-                            "}";
-                case 2:
-                    return "public class Version3 {\n" +
-                            "    public void method3() {\n" +
-                            "        System.out.println(\"Version 3\");\n" +
-                            "    }\n" +
-                            "}";
-                default:
-                    return "";
-            }
         }
     }
 }
