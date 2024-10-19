@@ -26,7 +26,7 @@ dependencies {
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
-    localPath.set("F:\\IntelliJ\\IntelliJ IDEA Community Edition 2024.2.3")
+    localPath.set("D:\\JAVA\\IntelliJ IDEA 2024.2.1")
     //    version.set("2023.2.6")
     //    type.set("IC") // Target IDE Platform
 

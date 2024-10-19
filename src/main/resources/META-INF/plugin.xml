@@ -48,5 +48,11 @@
                 description="CodeSave">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
+
+
+        <action id="showDetail" class="com.example.demo.showDetail.showDetailAction" text="showDetail"
+                description="显示版本窗口">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+        </action>
     </actions>
 </idea-plugin>
