@@ -36,10 +36,6 @@
     </extensions>
 
     <actions>
-        <action id="HistoryQuery" class="com.example.demo.localhistory.HistoryQueryAction" text="HistoryQuery"
-                description="HistoryQuery">
-            <add-to-group group-id="ToolsMenu" anchor="first"/>
-        </action>
         <action id="com.example.demo.git.initialGit" class="com.example.demo.git.initialGitCommit"
                 text="initialGitCommit" description="初始化代码推送">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
