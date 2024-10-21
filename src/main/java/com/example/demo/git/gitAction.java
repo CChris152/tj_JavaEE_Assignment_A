@@ -46,13 +46,12 @@ public class gitAction {
         git.add().setUpdate(true).addFilepattern(".").call();
 
         RevCommit commit =git.commit().setMessage("V."+version.toString()).call();
-        System.out.println("table enter");
+
         String commitMessage = commit.getShortMessage();
         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Commit History");
 
         // 更新表格内容
         CommitHistoryToolWindowFactory.addCommitInfo(commitMessage);
-        System.out.println("table done");
 
     }
 
@@ -67,7 +66,7 @@ public class gitAction {
     }
 
 
-    public static void applyCommitFromFineGrainedBranch(Git git, String targetBranch, String fineGrainedBranch, Project project) throws GitAPIException, IOException {
+    public static void applyCommitFromFineGrainedBranch(Git git, String targetBranch, String fineGrainedBranch , Project project) throws GitAPIException, IOException {
         Repository repository = git.getRepository();
 
         // 切换到目标分支
@@ -88,28 +87,15 @@ public class gitAction {
 
         // 生成 diff 信息
         String diffMessage = generateDiffBetweenCommits(repository, fineGrainedLastCommit, targetLastCommit);
-        ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Commit History");
 
-        // 更新表格内容
-        CommitHistoryToolWindowFactory.addCommitInfo("已结束自动commit");
+        // Cherry-pick fineGrained 分支的最后一个 commit 到目标分支
+        git.cherryPick().include(fineGrainedLastCommit).call();
 
-        File lockFile = new File(git.getRepository().getDirectory(), "index.lock");
-        if (lockFile.exists()) {
-            if (!lockFile.delete()) {
-                throw new IOException("Failed to delete lock file: " + lockFile.getAbsolutePath());
-            }
-        }
-
-
-        // 应用 fineGrained 分支的最后一次 commit 到目标分支
-        DirCacheCheckout checkout = new DirCacheCheckout(repository, repository.readDirCache(), fineGrainedLastCommit.getTree());
-        checkout.checkout();
-
-        // 提交新的 commit，带上 diff 信息
+        // 重新设置 commit 信息
         git.commit()
+                .setAmend(true)  // 修改最近一次的提交
                 .setMessage("Merged changes from " + fineGrainedBranch + " to " + targetBranch + "\n\nDiff:\n" + diffMessage)
                 .call();
-
 
         // 删除 fineGrained 分支
         git.branchDelete().setBranchNames(fineGrainedBranch).setForce(true).call();
