@@ -17,6 +17,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.example.demo.git.gitAction.applyCommitFromFineGrainedBranch;
+
 public class initialGitCommit extends AnAction {
 
 
@@ -51,10 +53,13 @@ public class initialGitCommit extends AnAction {
             if (isRunning) {
 
                 System.out.println("isRunning");
-                gitAction.mergeLastCommitFromBranch(gitRepository.getInstance(),"fineGrained",oldBranch);
-                gitRepository.getInstance().branchDelete().setBranchNames("fineGrained").call();
-            } else {
+                isRunning = !isRunning;
+                applyCommitFromFineGrainedBranch(gitRepository.getInstance(),oldBranch,"fineGrained",project);
+
+            }
+            else {
                 System.out.println("notRunning");
+                isRunning = !isRunning;
                 gitRepository.setGitDir(e.getProject().getBasePath());
                 initGit();
 
@@ -62,7 +67,7 @@ public class initialGitCommit extends AnAction {
 
 
             }
-            isRunning = !isRunning;
+
         }
         catch (GitAPIException ex){
             ex.printStackTrace();
@@ -116,12 +121,7 @@ public class initialGitCommit extends AnAction {
     /**
      * 因sheduler合并至主监听器上废弃
      * */
-    public void stopScheduler() throws GitAPIException, IOException {
-        if (scheduler != null && !scheduler.isShutdown()) {
-            scheduler.shutdownNow();
-        }
-        gitAction.mergeLast(gitRepository.getInstance(), oldBranch);
-    }
+
 
     @Override
     public void update(@NotNull AnActionEvent e) {
